@@ -31,6 +31,8 @@ if ($hassiteconfig) {
     global $ADMIN, $DB, $USER;
 
     $tenant = \tool_tenant\tenancy::get_actual_tenant_id($USER->id);
+    
+    $tenant = 1;
 
     $settings = new admin_settingspage_provider(
         'aiprovider_datacurso',
