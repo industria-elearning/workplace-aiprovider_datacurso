@@ -28,6 +28,10 @@ use core_ai\admin\admin_settingspage_provider;
 defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
+    global $ADMIN, $DB, $USER;
+
+    $tenant = \tool_tenant\tenancy::get_actual_tenant_id($USER->id);
+
     $settings = new admin_settingspage_provider(
         'aiprovider_datacurso',
         new lang_string('pluginname', 'aiprovider_datacurso'),
