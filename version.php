@@ -30,3 +30,6 @@ $plugin->version = 2025120301;
 $plugin->requires = 2024100700;
 $plugin->maturity = MATURITY_STABLE;
 $plugin->supported = [405, 405];
+$plugin->dependencies = [
+    'tool_tenant' => 2024110500,
+];
