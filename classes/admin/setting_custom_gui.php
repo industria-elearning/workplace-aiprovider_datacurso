@@ -30,8 +30,9 @@ class setting_custom_gui extends \admin_setting {
     public function write_setting($data) { return ''; }
 
     public function output_html($data, $query = '') {
-        global $OUTPUT, $PAGE;
+        global $OUTPUT, $USER;
 
+        $tenant = \tool_tenant\tenancy::get_tenant_id($USER->id);
 
         $services = \aiprovider_datacurso\provider::get_services();
         \core_collator::asort_array_of_arrays_by_key($services, 'name');

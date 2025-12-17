@@ -29,23 +29,17 @@ use aiprovider_datacurso\admin\setting_custom_gui;
 defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
-    global $ADMIN, $USER;
+    global $ADMIN;
 
-    $tenant = \tool_tenant\tenancy::get_tenant_id($USER->id);
-
-    // 1. Creamos el CONTENEDOR (la página). 
-    // Usamos admin_settingspage_provider para que se integre con el subsistema de IA de Moodle 4.5
     $settings = new \core_ai\admin\admin_settingspage_provider(
         'aiprovider_datacurso',
         new lang_string('pluginname', 'aiprovider_datacurso'),
         'moodle/site:config'
     );
 
-    // 2. Instanciamos tu clase personalizada (el CONTENIDO)
-    $customgui = new \aiprovider_datacurso\admin\setting_custom_gui();
+    $customform = new \aiprovider_datacurso\admin\setting_custom_gui();
 
-    // 3. Añadimos el contenido a la página (aquí es donde se usa el método add() del contenedor)
-    $settings->add($customgui);
+    $settings->add($customform);
 
     // 4. Añadimos la página completa al árbol de administración
     $ADMIN->add('aiproviders', $settings);
