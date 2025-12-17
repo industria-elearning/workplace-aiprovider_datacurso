@@ -16,54 +16,82 @@
 
 namespace aiprovider_datacurso\local\ratelimit;
 
-use admin_settingpage;
-use core_admin\local\settings\autocomplete;
-
 defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot . '/user/lib.php');
 
 /**
- * Class report_lifestory
+ * Moodleform adapter for Life Story report AI rate limit settings.
  *
  * @package    aiprovider_datacurso
- * @copyright  2025 Wilber Narvaez <https://datacurso.com>
+ * @copyright  2025 Wilber Narvaez
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class report_lifestory extends ratelimit_settings {
-    /** @var string Plugin component name. */
+class report_lifestory {
+
+    /** Plugin component name. */
     private const PLUGIN = 'aiprovider_datacurso';
 
     /**
-     * Add the rate limit settings related to Life Story report AI feedback generation.
+     * Add form elements to tenant settings form.
      *
-     * @param admin_settingpage $settings Settings page to append controls to.
-     * @param string $component Component name used to namespace config keys.
+     * @param \MoodleQuickForm $mform
+     * @param string $sid Service id (e.g. 'report_lifestory')
      */
-    public function add_settings(admin_settingpage $settings, string $component): void {
-        $configprefix = self::PLUGIN . "/ratelimit_{$component}";
+    public function add_form_elements(\MoodleQuickForm $mform, string $sid): void {
 
-        // Checkbox to enable limiting by allowed users list.
-        $allowedusersenable = new \admin_setting_configcheckbox(
-            "{$configprefix}_allowedusers_enable",
-            new \lang_string('ratelimit_report_lifestory_allowedusers_enable', self::PLUGIN),
-            new \lang_string('ratelimit_report_lifestory_allowedusers_enable_desc', self::PLUGIN),
-            0
+        $prefix = "ratelimit_{$sid}";
+        $enableid = "{$prefix}_allowedusers_enable";
+
+        // Enable checkbox.
+        $mform->addElement(
+            'advcheckbox',
+            $enableid,
+            get_string('ratelimit_report_lifestory_allowedusers_enable', self::PLUGIN),
+            get_string('ratelimit_report_lifestory_allowedusers_enable_desc', self::PLUGIN)
         );
-        $settings->add($allowedusersenable);
+        $mform->setType($enableid, PARAM_BOOL);
+        $mform->setDefault($enableid, 0);
 
-        $attributes = $this->get_autocomplete_attributes();
-        $choices = $this->get_user_choices([
+        $attributes = ratelimit_settings::get_autocomplete_attributes();
+
+        // Allowed users.
+        $choices = ratelimit_settings::get_user_choices([
             'report/lifestory:generateaifeedback',
         ]);
 
-        $settings->add(new autocomplete(
-            "{$configprefix}_allowedusers",
-            new \lang_string('ratelimit_report_lifestory_allowedusers', self::PLUGIN),
-            new \lang_string('ratelimit_report_lifestory_allowedusers_desc', self::PLUGIN),
-            [],
+        $allowedusersid = "{$prefix}_allowedusers";
+        $mform->addElement(
+            'autocomplete',
+            $allowedusersid,
+            get_string('ratelimit_report_lifestory_allowedusers', self::PLUGIN),
             $choices,
             $attributes
-        ));
-        $settings->hide_if("{$configprefix}_allowedusers", "{$configprefix}_allowedusers_enable", 'eq', 0);
+        );
+        $mform->setType($allowedusersid, PARAM_RAW);
+
+        // Hide if disabled.
+        $mform->hideIf($allowedusersid, $enableid, 'eq', 0);
+    }
+
+    /**
+     * Populate initial form data from config.
+     *
+     * @param string $sid Service id.
+     * @param \stdClass $data
+     * @return \stdClass
+     */
+    public function get_initial_data(string $sid, \stdClass $data): \stdClass {
+
+        $enablekey = "ratelimit_{$sid}_allowedusers_enable";
+        $data->{$enablekey} = get_config(self::PLUGIN, $enablekey);
+
+        $userskey = "ratelimit_{$sid}_allowedusers";
+        $raw = get_config(self::PLUGIN, $userskey);
+        if (!empty($raw)) {
+            $data->{$userskey} = explode(',', $raw);
+        }
+
+        return $data;
     }
 }
