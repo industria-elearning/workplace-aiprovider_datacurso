@@ -23,14 +23,16 @@ namespace aiprovider_datacurso\local\ratelimit;
  * @copyright  2025 Industria Elearning
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class ratelimit_settings {
+class ratelimit_settings
+{
     /**
      * Retrieve the list of selectable users for the autocomplete control.
      *
      * @param array $capabilities Capability names users must have to be selectable.
      * @return array<string,string>
      */
-    public static function get_user_choices(array $capabilities): array {
+    public static function get_user_choices(array $capabilities): array
+    {
         global $DB, $CFG;
 
         [$insql, $params] = $DB->get_in_or_equal($capabilities, SQL_PARAMS_NAMED);
@@ -77,7 +79,8 @@ class ratelimit_settings {
      *
      * @return array
      */
-    public static function get_autocomplete_attributes(): array {
+    public static function get_autocomplete_attributes(): array
+    {
         return [
             'multiple' => true,
             'showsuggestions' => true,
