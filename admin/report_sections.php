@@ -78,9 +78,9 @@ $tabs[] = new tabobject(
 );
 
 $tabs[] = new tabobject(
-        'configprovider',
-        new moodle_url('/ai/provider/datacurso/admin/settings_tenant.php', ['id' => $idprovider]),
-        get_string('link_provider_config', 'aiprovider_datacurso')
+    'configprovider',
+    new moodle_url('/ai/provider/datacurso/admin/settings_tenant.php', ['id' => $idprovider]),
+    get_string('link_provider_config', 'aiprovider_datacurso')
 );
 
 // Render page header and navigation.

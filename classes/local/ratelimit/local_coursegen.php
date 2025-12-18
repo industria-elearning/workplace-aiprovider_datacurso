@@ -55,7 +55,6 @@ class local_coursegen {
         $mform->setType($enableid, PARAM_BOOL);
         $mform->setDefault($enableid, 0);
 
-        // ===== Course creators =====
         $coursecreatorsid = "{$prefix}_coursecreators";
 
         $coursecreatorchoices = ratelimit_settings::get_user_choices([
@@ -78,7 +77,6 @@ class local_coursegen {
         $mform->setType($coursecreatorsid, PARAM_RAW);
         $mform->hideIf($coursecreatorsid, $enableid, 'notchecked');
 
-        // ===== Activity creators =====
         $activitycreatorsid = "{$prefix}_activitycreators";
 
         $activitycreatorchoices = ratelimit_settings::get_user_choices([

@@ -74,7 +74,7 @@ class settings_tenant_form extends \moodleform {
             );
             $mform->setType("ratelimit_{$sid}_enable", PARAM_BOOL);
 
-            // Limit. 
+            // Limit.
             $mform->addElement(
                 'text',
                 "ratelimit_{$sid}_limit",
