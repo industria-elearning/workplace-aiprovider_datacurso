@@ -133,7 +133,6 @@ function xmldb_aiprovider_datacurso_upgrade($oldversion) {
     }
 
     if ($oldversion < 2025120303) {
-
         // Define table config_plugins_datacurso to be created.
         $table = new xmldb_table('config_plugins_datacurso');
 
