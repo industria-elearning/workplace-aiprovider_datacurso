@@ -127,7 +127,6 @@ class local_coursegen {
 
         // Multi-user fields.
         foreach (['coursecreators', 'activitycreators'] as $field) {
-
             $raw =
                 \aiprovider_datacurso\local\tenant_config::get(
                     self::PLUGIN,

@@ -86,7 +86,7 @@ class report_lifestory {
         \stdClass $data,
         int $tenantid
     ): \stdClass {
-    
+
         // Enable flag.
         $enablekey = "ratelimit_{$sid}_allowedusers_enable";
         $data->{$enablekey} =
@@ -96,7 +96,7 @@ class report_lifestory {
                 $enablekey,
                 get_config(self::PLUGIN, $enablekey)
             );
-        
+
         // Allowed users.
         $userskey = "ratelimit_{$sid}_allowedusers";
         $raw =
@@ -106,12 +106,11 @@ class report_lifestory {
                 $userskey,
                 get_config(self::PLUGIN, $userskey)
             );
-        
+
         if (!empty($raw)) {
             $data->{$userskey} = explode(',', $raw);
         }
-    
+
         return $data;
     }
-
 }

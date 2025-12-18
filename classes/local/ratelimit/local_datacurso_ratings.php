@@ -105,7 +105,7 @@ class local_datacurso_ratings {
         \stdClass $data,
         int $tenantid
     ): \stdClass {
-    
+
         // Enable flag.
         $enablekey = "ratelimit_{$sid}_allowedusers_enable";
         $data->{$enablekey} =
@@ -115,7 +115,7 @@ class local_datacurso_ratings {
                 $enablekey,
                 get_config(self::PLUGIN, $enablekey)
             );
-        
+
         // Course analysts.
         $coursekey = "ratelimit_{$sid}_courseanalysts";
         $rawcourse =
@@ -125,11 +125,10 @@ class local_datacurso_ratings {
                 $coursekey,
                 get_config(self::PLUGIN, $coursekey)
             );
-        
         if (!empty($rawcourse)) {
             $data->{$coursekey} = explode(',', $rawcourse);
         }
-    
+
         // General analysts.
         $generalkey = "ratelimit_{$sid}_generalanalysts";
         $rawgeneral =
@@ -139,12 +138,9 @@ class local_datacurso_ratings {
                 $generalkey,
                 get_config(self::PLUGIN, $generalkey)
             );
-        
         if (!empty($rawgeneral)) {
             $data->{$generalkey} = explode(',', $rawgeneral);
         }
-    
         return $data;
     }
-
 }
