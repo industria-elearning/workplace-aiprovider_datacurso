@@ -28,7 +28,6 @@ require_once($CFG->dirroot . '/user/lib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class report_lifestory {
-
     /** Plugin component name. */
     private const PLUGIN = 'aiprovider_datacurso';
 

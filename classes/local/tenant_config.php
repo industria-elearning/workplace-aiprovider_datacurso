@@ -27,7 +27,6 @@ namespace aiprovider_datacurso\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class tenant_config {
-
     /** @var string Database table name */
     private const TABLE = 'config_plugins_datacurso';
 

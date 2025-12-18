@@ -30,6 +30,10 @@ namespace aiprovider_datacurso\local\ratelimit;
 
 /**
  * Utility class to manage common rate limit configurations.
+ * 
+ * @package    aiprovider_datacurso
+ * @copyright  2025 Industria Elearning
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class ratelimit_settings {
     /**
