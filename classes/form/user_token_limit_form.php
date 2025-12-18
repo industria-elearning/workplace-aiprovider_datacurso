@@ -50,10 +50,9 @@ class user_token_limit_form extends dynamic_form {
                 'userlabel',
                 get_string(
                     'usertokenlimit_user',
-                    'aiprovider_datacurso'),
-                format_string(
-                    $userlabel
-                )
+                    'aiprovider_datacurso'
+                ),
+                format_string($userlabel)
             );
             $mform->addHelpButton('userlabel', 'usertokenlimit_user_readonly', 'aiprovider_datacurso');
             $mform->addElement('hidden', 'userid');

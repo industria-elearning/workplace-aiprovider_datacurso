@@ -14,18 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Utility class providing common functionality for rate limit form elements.
- *
- * The abstract method add_settings is removed as per-service settings are now handled
- * via the hook listener calling the add_form_elements method directly on service classes.
- *
- * @package     aiprovider_datacurso
- * @category    admin
- * @copyright   2025 Wilber Narvaez <https://datacurso.com>
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace aiprovider_datacurso\local\ratelimit;
 
 /**

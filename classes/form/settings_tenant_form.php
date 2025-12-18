@@ -150,8 +150,8 @@ class settings_tenant_form extends \moodleform {
     }
 
     /**
-    * Initial data population (tenant-aware).
-    */
+     * Initial data population (tenant-aware).
+     */
     protected function get_initial_data(): \stdClass {
         global $USER;
 
