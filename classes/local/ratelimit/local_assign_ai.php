@@ -31,7 +31,6 @@ require_once($CFG->dirroot . '/user/lib.php');
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class local_assign_ai {
-
     /** @var string Plugin component name. */
     private const PLUGIN = 'aiprovider_datacurso';
 

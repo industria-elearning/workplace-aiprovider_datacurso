@@ -31,7 +31,6 @@ require_once($CFG->dirroot . '/user/lib.php');
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class local_coursegen {
-
     /** @var string Plugin component name. */
     private const PLUGIN = 'aiprovider_datacurso';
 
@@ -116,7 +115,7 @@ class local_coursegen {
         \stdClass $data,
         int $tenantid
     ): \stdClass {
-    
+
         // Enable flag.
         $data->{"ratelimit_{$sid}_allowedusers_enable"} =
             \aiprovider_datacurso\local\tenant_config::get(
@@ -125,10 +124,10 @@ class local_coursegen {
                 "ratelimit_{$sid}_allowedusers_enable",
                 get_config(self::PLUGIN, "ratelimit_{$sid}_allowedusers_enable")
             );
-        
+
         // Multi-user fields.
         foreach (['coursecreators', 'activitycreators'] as $field) {
-        
+
             $raw =
                 \aiprovider_datacurso\local\tenant_config::get(
                     self::PLUGIN,
@@ -136,12 +135,12 @@ class local_coursegen {
                     "ratelimit_{$sid}_{$field}",
                     get_config(self::PLUGIN, "ratelimit_{$sid}_{$field}")
                 );
-            
+
             if (!empty($raw)) {
                 $data->{"ratelimit_{$sid}_{$field}"} = explode(',', $raw);
             }
         }
-    
+
         return $data;
     }
 }

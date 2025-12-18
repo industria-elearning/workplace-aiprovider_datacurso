@@ -36,9 +36,6 @@ class settings_tenant_form extends \moodleform {
     public function definition(): void {
         $mform = $this->_form;
 
-        /* =========================
-         * General settings
-         * ========================= */
         $mform->addElement('header', 'general', get_string('settings', 'core'));
 
         $mform->addElement(
@@ -48,9 +45,6 @@ class settings_tenant_form extends \moodleform {
         );
         $mform->addHelpButton('licensekey', 'licensekey', 'aiprovider_datacurso');
 
-        /* =========================
-         * Rate limits
-         * ========================= */
         $mform->addElement(
             'header',
             'ratelimits',
@@ -71,7 +65,7 @@ class settings_tenant_form extends \moodleform {
                 format_string($sname)
             );
 
-            /* ---- Enable ---- */
+            // Enable.
             $mform->addElement(
                 'advcheckbox',
                 "ratelimit_{$sid}_enable",
@@ -80,7 +74,7 @@ class settings_tenant_form extends \moodleform {
             );
             $mform->setType("ratelimit_{$sid}_enable", PARAM_BOOL);
 
-            /* ---- Limit ---- */
+            // Limit. 
             $mform->addElement(
                 'text',
                 "ratelimit_{$sid}_limit",
@@ -100,7 +94,7 @@ class settings_tenant_form extends \moodleform {
                 0
             );
 
-            /* ---- Window (value + unit) ---- */
+            // Window value + unit.
             $mform->addElement(
                 'text',
                 "ratelimit_{$sid}_window_value",
@@ -142,9 +136,6 @@ class settings_tenant_form extends \moodleform {
                 0
             );
 
-            /* =========================
-             * Service-specific extensions
-             * ========================= */
             $classname = "\\aiprovider_datacurso\\local\\ratelimit\\{$sid}";
             if (class_exists($classname)) {
                 $serviceconfig = new $classname();
@@ -233,9 +224,6 @@ class settings_tenant_form extends \moodleform {
                 $data->{"ratelimit_{$sid}_window_unit"} = $windowunit;
             }
 
-            /* =========================
-             * Service-specific initial data
-             * ========================= */
             $classname = "\\aiprovider_datacurso\\local\\ratelimit\\{$sid}";
             if (class_exists($classname)) {
                 $serviceconfig = new $classname();
