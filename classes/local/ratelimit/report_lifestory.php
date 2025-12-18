@@ -75,23 +75,44 @@ class report_lifestory {
     }
 
     /**
-     * Populate initial form data from config.
+     * Populate initial form data from tenant config (with fallback).
      *
-     * @param string $sid Service id.
+     * @param string    $sid Service id.
      * @param \stdClass $data
+     * @param int       $tenantid
      * @return \stdClass
      */
-    public function get_initial_data(string $sid, \stdClass $data): \stdClass {
-
+    public function get_initial_data(
+        string $sid,
+        \stdClass $data,
+        int $tenantid
+    ): \stdClass {
+    
+        // Enable flag.
         $enablekey = "ratelimit_{$sid}_allowedusers_enable";
-        $data->{$enablekey} = get_config(self::PLUGIN, $enablekey);
-
+        $data->{$enablekey} =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                $enablekey,
+                get_config(self::PLUGIN, $enablekey)
+            );
+        
+        // Allowed users.
         $userskey = "ratelimit_{$sid}_allowedusers";
-        $raw = get_config(self::PLUGIN, $userskey);
+        $raw =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                $userskey,
+                get_config(self::PLUGIN, $userskey)
+            );
+        
         if (!empty($raw)) {
             $data->{$userskey} = explode(',', $raw);
         }
-
+    
         return $data;
     }
+
 }

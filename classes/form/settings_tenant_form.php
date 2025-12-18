@@ -159,43 +159,88 @@ class settings_tenant_form extends \moodleform {
     }
 
     /**
-     * Initial data population (simulates settings.php behaviour for now).
-     */
+    * Initial data population (tenant-aware).
+    */
     protected function get_initial_data(): \stdClass {
+        global $USER;
+
         $data = new \stdClass();
 
-        // General.
-        $data->licensekey = get_config('aiprovider_datacurso', 'licensekey');
+        $tenantid = \tool_tenant\tenancy::get_tenant_id($USER->id);
 
-        // Rate limits.
+        $data->licensekey =
+            \aiprovider_datacurso\local\tenant_config::get(
+                'aiprovider_datacurso',
+                $tenantid,
+                'licensekey',
+                get_config('aiprovider_datacurso', 'licensekey')
+            );
+
         $services = \aiprovider_datacurso\provider::get_services();
+
         foreach ($services as $service) {
             $sid = $service['id'];
 
             $data->{"ratelimit_{$sid}_enable"} =
-                get_config('aiprovider_datacurso', "ratelimit_{$sid}_enable");
+                \aiprovider_datacurso\local\tenant_config::get(
+                    'aiprovider_datacurso',
+                    $tenantid,
+                    "ratelimit_{$sid}_enable",
+                    get_config('aiprovider_datacurso', "ratelimit_{$sid}_enable")
+                );
 
             $data->{"ratelimit_{$sid}_limit"} =
-                get_config('aiprovider_datacurso', "ratelimit_{$sid}_limit");
+                \aiprovider_datacurso\local\tenant_config::get(
+                    'aiprovider_datacurso',
+                    $tenantid,
+                    "ratelimit_{$sid}_limit",
+                    get_config('aiprovider_datacurso', "ratelimit_{$sid}_limit")
+                );
 
-            // Window stored as JSON in legacy config.
-            $window = get_config('aiprovider_datacurso', "ratelimit_{$sid}_window");
-            if ($window) {
-                $decoded = json_decode($window);
-                if (!empty($decoded->value)) {
-                    $data->{"ratelimit_{$sid}_window_value"} = (int)$decoded->value;
-                }
-                if (!empty($decoded->unit)) {
-                    $data->{"ratelimit_{$sid}_window_unit"} = $decoded->unit;
+            /* ---- Window (value + unit) ---- */
+            $windowvalue =
+                \aiprovider_datacurso\local\tenant_config::get(
+                    'aiprovider_datacurso',
+                    $tenantid,
+                    "ratelimit_{$sid}_window_value"
+                );
+
+            $windowunit =
+                \aiprovider_datacurso\local\tenant_config::get(
+                    'aiprovider_datacurso',
+                    $tenantid,
+                    "ratelimit_{$sid}_window_unit"
+                );
+
+            // Fallback legacy JSON window.
+            if ($windowvalue === null || $windowunit === null) {
+                $window = get_config('aiprovider_datacurso', "ratelimit_{$sid}_window");
+                if ($window) {
+                    $decoded = json_decode($window);
+                    if ($windowvalue === null && !empty($decoded->value)) {
+                        $windowvalue = (int)$decoded->value;
+                    }
+                    if ($windowunit === null && !empty($decoded->unit)) {
+                        $windowunit = $decoded->unit;
+                    }
                 }
             }
 
-            // Service-specific initial data.
+            if ($windowvalue !== null) {
+                $data->{"ratelimit_{$sid}_window_value"} = (int)$windowvalue;
+            }
+            if ($windowunit !== null) {
+                $data->{"ratelimit_{$sid}_window_unit"} = $windowunit;
+            }
+
+            /* =========================
+             * Service-specific initial data
+             * ========================= */
             $classname = "\\aiprovider_datacurso\\local\\ratelimit\\{$sid}";
             if (class_exists($classname)) {
                 $serviceconfig = new $classname();
                 if (method_exists($serviceconfig, 'get_initial_data')) {
-                    $data = $serviceconfig->get_initial_data($sid, $data);
+                    $data = $serviceconfig->get_initial_data($sid, $data, $tenantid);
                 }
             }
         }
@@ -207,6 +252,6 @@ class settings_tenant_form extends \moodleform {
      * Required for dynamic submissions.
      */
     public function set_data_for_dynamic_submission(): void {
-        $this->set_data($this->get_initial_data());
+         $this->set_data($this->get_initial_data());
     }
 }

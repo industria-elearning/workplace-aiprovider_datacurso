@@ -93,29 +93,58 @@ class local_datacurso_ratings {
     }
 
     /**
-     * Populate initial form data from config.
+     * Populate initial form data from tenant config (with fallback).
      *
-     * @param string $sid Service id.
+     * @param string    $sid Service id.
      * @param \stdClass $data
+     * @param int       $tenantid
      * @return \stdClass
      */
-    public function get_initial_data(string $sid, \stdClass $data): \stdClass {
-
+    public function get_initial_data(
+        string $sid,
+        \stdClass $data,
+        int $tenantid
+    ): \stdClass {
+    
+        // Enable flag.
         $enablekey = "ratelimit_{$sid}_allowedusers_enable";
-        $data->{$enablekey} = get_config(self::PLUGIN, $enablekey);
-
+        $data->{$enablekey} =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                $enablekey,
+                get_config(self::PLUGIN, $enablekey)
+            );
+        
+        // Course analysts.
         $coursekey = "ratelimit_{$sid}_courseanalysts";
-        $rawcourse = get_config(self::PLUGIN, $coursekey);
+        $rawcourse =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                $coursekey,
+                get_config(self::PLUGIN, $coursekey)
+            );
+        
         if (!empty($rawcourse)) {
             $data->{$coursekey} = explode(',', $rawcourse);
         }
-
+    
+        // General analysts.
         $generalkey = "ratelimit_{$sid}_generalanalysts";
-        $rawgeneral = get_config(self::PLUGIN, $generalkey);
+        $rawgeneral =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                $generalkey,
+                get_config(self::PLUGIN, $generalkey)
+            );
+        
         if (!empty($rawgeneral)) {
             $data->{$generalkey} = explode(',', $rawgeneral);
         }
-
+    
         return $data;
     }
+
 }

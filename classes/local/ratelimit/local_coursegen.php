@@ -104,24 +104,44 @@ class local_coursegen {
     }
 
     /**
-     * Inject initial values for service-specific fields.
+     * Inject initial values for service-specific fields (tenant-aware).
      *
-     * @param string $sid
+     * @param string    $sid
      * @param \stdClass $data
+     * @param int       $tenantid
      * @return \stdClass
      */
-    public function get_initial_data(string $sid, \stdClass $data): \stdClass {
-
+    public function get_initial_data(
+        string $sid,
+        \stdClass $data,
+        int $tenantid
+    ): \stdClass {
+    
+        // Enable flag.
         $data->{"ratelimit_{$sid}_allowedusers_enable"} =
-            get_config(self::PLUGIN, "ratelimit_{$sid}_allowedusers_enable");
-
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                "ratelimit_{$sid}_allowedusers_enable",
+                get_config(self::PLUGIN, "ratelimit_{$sid}_allowedusers_enable")
+            );
+        
+        // Multi-user fields.
         foreach (['coursecreators', 'activitycreators'] as $field) {
-            $raw = get_config(self::PLUGIN, "ratelimit_{$sid}_{$field}");
+        
+            $raw =
+                \aiprovider_datacurso\local\tenant_config::get(
+                    self::PLUGIN,
+                    $tenantid,
+                    "ratelimit_{$sid}_{$field}",
+                    get_config(self::PLUGIN, "ratelimit_{$sid}_{$field}")
+                );
+            
             if (!empty($raw)) {
                 $data->{"ratelimit_{$sid}_{$field}"} = explode(',', $raw);
             }
         }
-
+    
         return $data;
     }
 }

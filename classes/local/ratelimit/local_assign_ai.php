@@ -86,18 +86,37 @@ class local_assign_ai {
     }
 
     /**
-     * Inject initial data for service-specific fields.
+     * Inject initial data for service-specific fields (tenant-aware).
      *
-     * @param string $sid
+     * @param string    $sid
      * @param \stdClass $data
+     * @param int       $tenantid
      * @return \stdClass
      */
-    public function get_initial_data(string $sid, \stdClass $data): \stdClass {
+    public function get_initial_data(
+        string $sid,
+        \stdClass $data,
+        int $tenantid
+    ): \stdClass {
 
+        // Enable flag.
         $data->{"ratelimit_{$sid}_allowedusers_enable"} =
-            get_config(self::PLUGIN, "ratelimit_{$sid}_allowedusers_enable");
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                "ratelimit_{$sid}_allowedusers_enable",
+                get_config(self::PLUGIN, "ratelimit_{$sid}_allowedusers_enable")
+            );
 
-        $raw = get_config(self::PLUGIN, "ratelimit_{$sid}_allowedusers");
+        // Allowed users list.
+        $raw =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                "ratelimit_{$sid}_allowedusers",
+                get_config(self::PLUGIN, "ratelimit_{$sid}_allowedusers")
+            );
+
         if (!empty($raw)) {
             $data->{"ratelimit_{$sid}_allowedusers"} = explode(',', $raw);
         }
