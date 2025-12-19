@@ -44,33 +44,43 @@ class tenant_config {
     ): void {
         global $DB;
 
-        // Remove any previous configuration for this plugin + tenant.
-        $DB->delete_records(self::TABLE, [
-            'plugin'    => $plugin,
-            'tenant_id' => $tenantid,
-        ]);
-
         foreach ((array)$data as $name => $value) {
-            // Skip internal form fields.
             if (in_array($name, ['submitbutton', 'cancel'], true)) {
                 continue;
             }
 
-            // Normalize values.
             if (is_array($value) || is_object($value)) {
                 $value = json_encode($value);
             }
 
-            $record = (object)[
+            $conditions = [
                 'plugin'    => $plugin,
                 'tenant_id' => $tenantid,
                 'name'      => $name,
-                'value'     => (string)$value,
             ];
 
-            $DB->insert_record(self::TABLE, $record);
+            $existingid = $DB->get_field(
+                self::TABLE,
+                'id',
+                $conditions,
+                IGNORE_MISSING
+            );
+
+            if ($existingid) {
+                $record = (object)$conditions;
+                $record->id    = $existingid;
+                $record->value = (string)$value;
+
+                $DB->update_record(self::TABLE, $record);
+            } else {
+                $record = (object)$conditions;
+                $record->value = (string)$value;
+
+                $DB->insert_record(self::TABLE, $record);
+            }
         }
     }
+
 
     /**
      * Get a configuration value for a tenant.
