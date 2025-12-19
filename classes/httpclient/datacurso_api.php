@@ -37,8 +37,8 @@ class datacurso_api {
     private $licensekey;
 
     /**
-     * Builder 
-     * 
+     * Builder
+     *
      * @param string $licensekey
      * @throws moodle_exception
      */

@@ -176,7 +176,7 @@ class get_all_consumption extends external_api {
                 'status' => 'success',
                 'total' => count($allconsumptions),
                 'consumption' => $allconsumptions,
-            ];;
+            ];
         }
 
         return [
