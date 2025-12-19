@@ -131,5 +131,30 @@ function xmldb_aiprovider_datacurso_upgrade($oldversion) {
         // Datacurso savepoint reached.
         upgrade_plugin_savepoint(true, 2025120301, 'aiprovider', 'datacurso');
     }
+
+    if ($oldversion < 2025121900) {
+        // Define table aiprovider_datacurso_tenant_config to be created.
+        $table = new xmldb_table('aiprovider_datacurso_tenant_config');
+
+        // Adding fields to table aiprovider_datacurso_tenant_config.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('plugin', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('tenant_id', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('value', XMLDB_TYPE_TEXT, null, null, null, null, null);
+
+        // Adding keys to table aiprovider_datacurso_tenant_config.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('plugin_tenant_name_uk', XMLDB_KEY_UNIQUE, ['plugin', 'tenant_id', 'name']);
+
+        // Conditionally launch create table for aiprovider_datacurso_tenant_config.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Datacurso savepoint reached.
+        upgrade_plugin_savepoint(true, 2025121900, 'aiprovider', 'datacurso');
+    }
+
     return true;
 }

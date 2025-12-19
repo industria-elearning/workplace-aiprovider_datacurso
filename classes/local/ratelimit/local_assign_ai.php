@@ -16,58 +16,110 @@
 
 namespace aiprovider_datacurso\local\ratelimit;
 
-use admin_settingpage;
-use core_admin\local\settings\autocomplete;
+use lang_string;
+use MoodleQuickForm;
 
 defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot . '/user/lib.php');
 
 /**
- * Class local_assign_ai
+ * Extra rate-limit settings for local_assign_ai service.
  *
- * @package    aiprovider_datacurso
- * @copyright  2025 Wilber Narvaez <https://datacurso.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     aiprovider_datacurso
+ * @copyright   2025 Industria Elearning
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_assign_ai extends ratelimit_settings {
+class local_assign_ai {
     /** @var string Plugin component name. */
     private const PLUGIN = 'aiprovider_datacurso';
 
     /**
-     * Add the rate limit settings related to course generation.
+     * Add service-specific form elements to the tenant settings form.
      *
-     * @param admin_settingpage $settings Settings page to append controls to.
-     * @param string $component Component name used to namespace config keys.
+     * @param MoodleQuickForm $mform
+     * @param string $sid Service id (e.g. 'local_assign_ai')
      */
-    public function add_settings(admin_settingpage $settings, string $component): void {
-        $configprefix = self::PLUGIN . "/ratelimit_{$component}";
+    public function add_form_elements(MoodleQuickForm $mform, string $sid): void {
 
-        // Checkbox to enable limiting by allowed users list.
-        $allowedusersenable = new \admin_setting_configcheckbox(
-            "{$configprefix}_allowedusers_enable",
-            new \lang_string('ratelimit_local_assign_ai_allowedusers_enable', self::PLUGIN),
-            new \lang_string('ratelimit_local_assign_ai_allowedusers_enable_desc', self::PLUGIN),
-            0
+        $prefix = "ratelimit_{$sid}";
+        $enableid = "{$prefix}_allowedusers_enable";
+        $usersid  = "{$prefix}_allowedusers";
+
+        // Enable checkbox.
+        $mform->addElement(
+            'advcheckbox',
+            $enableid,
+            new lang_string('ratelimit_local_assign_ai_allowedusers_enable', self::PLUGIN),
+            new lang_string('ratelimit_local_assign_ai_allowedusers_enable_desc', self::PLUGIN)
         );
-        $settings->add($allowedusersenable);
+        $mform->setType($enableid, PARAM_BOOL);
+        $mform->setDefault($enableid, 0);
 
-        $attributes = $this->get_autocomplete_attributes();
-        $choices = $this->get_user_choices([
+        // Autocomplete users.
+        $choices = ratelimit_settings::get_user_choices([
             'local/assign_ai:review',
             'local/assign_ai:changestatus',
             'local/assign_ai:viewdetails',
             'mod/assign:submit',
         ]);
 
-        $settings->add(
-            new autocomplete(
-                "{$configprefix}_allowedusers",
-                new \lang_string('ratelimit_local_assign_ai_allowedusers', self::PLUGIN),
-                new \lang_string('ratelimit_local_assign_ai_allowedusers_desc', self::PLUGIN),
-                [],
-                $choices,
-                $attributes
-            )
+        $attributes = ratelimit_settings::get_autocomplete_attributes();
+
+        $mform->addElement(
+            'autocomplete',
+            $usersid,
+            new lang_string('ratelimit_local_assign_ai_allowedusers', self::PLUGIN),
+            $choices,
+            $attributes
         );
+        $mform->addHelpButton(
+            $usersid,
+            'ratelimit_local_assign_ai_allowedusers_desc',
+            self::PLUGIN
+        );
+        $mform->setType($usersid, PARAM_RAW);
+
+        // Conditional display.
+        $mform->hideIf($usersid, $enableid, 'notchecked');
+    }
+
+    /**
+     * Inject initial data for service-specific fields (tenant-aware).
+     *
+     * @param string    $sid
+     * @param \stdClass $data
+     * @param int       $tenantid
+     * @return \stdClass
+     */
+    public function get_initial_data(
+        string $sid,
+        \stdClass $data,
+        int $tenantid
+    ): \stdClass {
+
+        // Enable flag.
+        $data->{"ratelimit_{$sid}_allowedusers_enable"} =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                "ratelimit_{$sid}_allowedusers_enable",
+                get_config(self::PLUGIN, "ratelimit_{$sid}_allowedusers_enable")
+            );
+
+        // Allowed users list.
+        $raw =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                "ratelimit_{$sid}_allowedusers",
+                get_config(self::PLUGIN, "ratelimit_{$sid}_allowedusers")
+            );
+
+        if (!empty($raw)) {
+            $data->{"ratelimit_{$sid}_allowedusers"} = explode(',', $raw);
+        }
+
+        return $data;
     }
 }

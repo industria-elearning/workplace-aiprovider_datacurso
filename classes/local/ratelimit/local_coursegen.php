@@ -16,71 +16,128 @@
 
 namespace aiprovider_datacurso\local\ratelimit;
 
-use admin_settingpage;
-use core_admin\local\settings\autocomplete;
+use lang_string;
+use MoodleQuickForm;
 
 defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot . '/user/lib.php');
 
 /**
- * Class local_coursegen
+ * Extra rate-limit settings for local_coursegen service.
  *
- * @package    aiprovider_datacurso
- * @copyright  2025 Wilber Narvaez <https://datacurso.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     aiprovider_datacurso
+ * @copyright   2025 Industria Elearning
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_coursegen extends ratelimit_settings {
+class local_coursegen {
     /** @var string Plugin component name. */
     private const PLUGIN = 'aiprovider_datacurso';
 
     /**
-     * Add the rate limit settings related to course generation.
+     * Add service-specific form elements.
      *
-     * @param admin_settingpage $settings Settings page to append controls to.
-     * @param string $component Component name used to namespace config keys.
+     * @param MoodleQuickForm $mform
+     * @param string $sid Service id (local_coursegen)
      */
-    public function add_settings(admin_settingpage $settings, string $component): void {
-        $configprefix = self::PLUGIN . "/ratelimit_{$component}";
+    public function add_form_elements(MoodleQuickForm $mform, string $sid): void {
 
-        // Checkbox to enable limiting by allowed users list.
-        $allowedusersenable = new \admin_setting_configcheckbox(
-            "{$configprefix}_allowedusers_enable",
-            new \lang_string('ratelimit_local_coursegen_allowedusers_enable', self::PLUGIN),
-            new \lang_string('ratelimit_local_coursegen_allowedusers_enable_desc', self::PLUGIN),
-            0
+        $prefix = "ratelimit_{$sid}";
+        $enableid = "{$prefix}_allowedusers_enable";
+
+        // Enable checkbox.
+        $mform->addElement(
+            'advcheckbox',
+            $enableid,
+            new lang_string('ratelimit_local_coursegen_allowedusers_enable', self::PLUGIN),
+            new lang_string('ratelimit_local_coursegen_allowedusers_enable_desc', self::PLUGIN)
         );
-        $settings->add($allowedusersenable);
+        $mform->setType($enableid, PARAM_BOOL);
+        $mform->setDefault($enableid, 0);
 
-        $attributes = $this->get_autocomplete_attributes();
-        $choices = $this->get_user_choices([
+        $coursecreatorsid = "{$prefix}_coursecreators";
+
+        $coursecreatorchoices = ratelimit_settings::get_user_choices([
             'moodle/course:create',
             'local/coursegen:createcoursewithai',
         ]);
 
-        $coursecreators = new autocomplete(
-            "{$configprefix}_coursecreators",
-            new \lang_string('ratelimit_local_coursegen_coursecreators', self::PLUGIN),
-            new \lang_string('ratelimit_local_coursegen_coursecreators_desc', self::PLUGIN),
-            [],
-            $choices,
-            $attributes
+        $mform->addElement(
+            'autocomplete',
+            $coursecreatorsid,
+            new lang_string('ratelimit_local_coursegen_coursecreators', self::PLUGIN),
+            $coursecreatorchoices,
+            ratelimit_settings::get_autocomplete_attributes()
         );
-        $settings->add($coursecreators);
-        $settings->hide_if("{$configprefix}_coursecreators", "{$configprefix}_allowedusers_enable", 'eq', 0);
+        $mform->addHelpButton(
+            $coursecreatorsid,
+            'ratelimit_local_coursegen_coursecreators_desc',
+            self::PLUGIN
+        );
+        $mform->setType($coursecreatorsid, PARAM_RAW);
+        $mform->hideIf($coursecreatorsid, $enableid, 'notchecked');
 
-        $choices = ratelimit_settings::get_user_choices([
+        $activitycreatorsid = "{$prefix}_activitycreators";
+
+        $activitycreatorchoices = ratelimit_settings::get_user_choices([
             'moodle/course:manageactivities',
             'local/coursegen:createactivitywithai',
         ]);
-        $activitycreators = new autocomplete(
-            "{$configprefix}_activitycreators",
-            new \lang_string('ratelimit_local_coursegen_activitycreators', self::PLUGIN),
-            new \lang_string('ratelimit_local_coursegen_activitycreators_desc', self::PLUGIN),
-            [],
-            $choices,
-            $attributes
+
+        $mform->addElement(
+            'autocomplete',
+            $activitycreatorsid,
+            new lang_string('ratelimit_local_coursegen_activitycreators', self::PLUGIN),
+            $activitycreatorchoices,
+            ratelimit_settings::get_autocomplete_attributes()
         );
-        $settings->add($activitycreators);
-        $settings->hide_if("{$configprefix}_activitycreators", "{$configprefix}_allowedusers_enable", 'eq', 0);
+        $mform->addHelpButton(
+            $activitycreatorsid,
+            'ratelimit_local_coursegen_activitycreators_desc',
+            self::PLUGIN
+        );
+        $mform->setType($activitycreatorsid, PARAM_RAW);
+        $mform->hideIf($activitycreatorsid, $enableid, 'notchecked');
+    }
+
+    /**
+     * Inject initial values for service-specific fields (tenant-aware).
+     *
+     * @param string    $sid
+     * @param \stdClass $data
+     * @param int       $tenantid
+     * @return \stdClass
+     */
+    public function get_initial_data(
+        string $sid,
+        \stdClass $data,
+        int $tenantid
+    ): \stdClass {
+
+        // Enable flag.
+        $data->{"ratelimit_{$sid}_allowedusers_enable"} =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                "ratelimit_{$sid}_allowedusers_enable",
+                get_config(self::PLUGIN, "ratelimit_{$sid}_allowedusers_enable")
+            );
+
+        // Multi-user fields.
+        foreach (['coursecreators', 'activitycreators'] as $field) {
+            $raw =
+                \aiprovider_datacurso\local\tenant_config::get(
+                    self::PLUGIN,
+                    $tenantid,
+                    "ratelimit_{$sid}_{$field}",
+                    get_config(self::PLUGIN, "ratelimit_{$sid}_{$field}")
+                );
+
+            if (!empty($raw)) {
+                $data->{"ratelimit_{$sid}_{$field}"} = explode(',', $raw);
+            }
+        }
+
+        return $data;
     }
 }

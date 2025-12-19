@@ -16,72 +16,131 @@
 
 namespace aiprovider_datacurso\local\ratelimit;
 
-use admin_settingpage;
-use core_admin\local\settings\autocomplete;
-
 defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot . '/user/lib.php');
 
 /**
- * Class local_datacurso_ratings
+ * Moodleform adapter for Datacurso ratings AI rate limit settings.
  *
  * @package    aiprovider_datacurso
- * @copyright  2025 Wilber Narvaez <https://datacurso.com>
+ * @copyright  2025 Wilber Narvaez
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class local_datacurso_ratings extends ratelimit_settings {
-    /** @var string Plugin component name. */
+class local_datacurso_ratings {
+    /** Plugin component name. */
     private const PLUGIN = 'aiprovider_datacurso';
 
     /**
-     * Add the rate limit settings related to ratings analysis with AI.
+     * Add form elements to tenant settings form.
      *
-     * @param admin_settingpage $settings Settings page to append controls to.
-     * @param string $component Component name used to namespace config keys.
+     * @param \MoodleQuickForm $mform
+     * @param string $sid Service id (e.g. 'local_datacurso_ratings')
      */
-    public function add_settings(admin_settingpage $settings, string $component): void {
-        $configprefix = self::PLUGIN . "/ratelimit_{$component}";
+    public function add_form_elements(\MoodleQuickForm $mform, string $sid): void {
 
-        // Checkbox to enable limiting by allowed users list.
-        $allowedusersenable = new \admin_setting_configcheckbox(
-            "{$configprefix}_allowedusers_enable",
-            new \lang_string('ratelimit_local_datacurso_ratings_allowedusers_enable', self::PLUGIN),
-            new \lang_string('ratelimit_local_datacurso_ratings_allowedusers_enable_desc', self::PLUGIN),
-            0
+        $prefix = "ratelimit_{$sid}";
+        $enableid = "{$prefix}_allowedusers_enable";
+
+        // Enable checkbox.
+        $mform->addElement(
+            'advcheckbox',
+            $enableid,
+            get_string('ratelimit_local_datacurso_ratings_allowedusers_enable', self::PLUGIN),
+            get_string('ratelimit_local_datacurso_ratings_allowedusers_enable_desc', self::PLUGIN)
         );
-        $settings->add($allowedusersenable);
+        $mform->setType($enableid, PARAM_BOOL);
+        $mform->setDefault($enableid, 0);
 
-        $attributes = $this->get_autocomplete_attributes();
+        $attributes = ratelimit_settings::get_autocomplete_attributes();
 
-        // Course analysis generators.
-        $coursechoices = $this->get_user_choices([
+        // Course / activity analysts.
+        $coursechoices = ratelimit_settings::get_user_choices([
             'local/datacurso_ratings:generateanalysiscourse',
             'local/datacurso_ratings:generateanalysisactivity',
         ]);
-        $courseanalysts = new autocomplete(
-            "{$configprefix}_courseanalysts",
-            new \lang_string('ratelimit_local_datacurso_ratings_courseanalysts', self::PLUGIN),
-            new \lang_string('ratelimit_local_datacurso_ratings_courseanalysts_desc', self::PLUGIN),
-            [],
+
+        $courseid = "{$prefix}_courseanalysts";
+        $mform->addElement(
+            'autocomplete',
+            $courseid,
+            get_string('ratelimit_local_datacurso_ratings_courseanalysts', self::PLUGIN),
             $coursechoices,
             $attributes
         );
-        $settings->add($courseanalysts);
-        $settings->hide_if("{$configprefix}_courseanalysts", "{$configprefix}_allowedusers_enable", 'eq', 0);
+        $mform->setType($courseid, PARAM_RAW);
 
-        // General analysis generators.
-        $generalchoices = $this->get_user_choices([
+        // Hide if disabled.
+        $mform->hideIf($courseid, $enableid, 'eq', 0);
+
+        // General analysts.
+        $generalchoices = ratelimit_settings::get_user_choices([
             'local/datacurso_ratings:generateanalysisgeneral',
         ]);
-        $generalanalysts = new autocomplete(
-            "{$configprefix}_generalanalysts",
-            new \lang_string('ratelimit_local_datacurso_ratings_generalanalysts', self::PLUGIN),
-            new \lang_string('ratelimit_local_datacurso_ratings_generalanalysts_desc', self::PLUGIN),
-            [],
+
+        $generalid = "{$prefix}_generalanalysts";
+        $mform->addElement(
+            'autocomplete',
+            $generalid,
+            get_string('ratelimit_local_datacurso_ratings_generalanalysts', self::PLUGIN),
             $generalchoices,
             $attributes
         );
-        $settings->add($generalanalysts);
-        $settings->hide_if("{$configprefix}_generalanalysts", "{$configprefix}_allowedusers_enable", 'eq', 0);
+        $mform->setType($generalid, PARAM_RAW);
+
+        // Hide if disabled.
+        $mform->hideIf($generalid, $enableid, 'eq', 0);
+    }
+
+    /**
+     * Populate initial form data from tenant config (with fallback).
+     *
+     * @param string    $sid Service id.
+     * @param \stdClass $data
+     * @param int       $tenantid
+     * @return \stdClass
+     */
+    public function get_initial_data(
+        string $sid,
+        \stdClass $data,
+        int $tenantid
+    ): \stdClass {
+
+        // Enable flag.
+        $enablekey = "ratelimit_{$sid}_allowedusers_enable";
+        $data->{$enablekey} =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                $enablekey,
+                get_config(self::PLUGIN, $enablekey)
+            );
+
+        // Course analysts.
+        $coursekey = "ratelimit_{$sid}_courseanalysts";
+        $rawcourse =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                $coursekey,
+                get_config(self::PLUGIN, $coursekey)
+            );
+        if (!empty($rawcourse)) {
+            $data->{$coursekey} = explode(',', $rawcourse);
+        }
+
+        // General analysts.
+        $generalkey = "ratelimit_{$sid}_generalanalysts";
+        $rawgeneral =
+            \aiprovider_datacurso\local\tenant_config::get(
+                self::PLUGIN,
+                $tenantid,
+                $generalkey,
+                get_config(self::PLUGIN, $generalkey)
+            );
+        if (!empty($rawgeneral)) {
+            $data->{$generalkey} = explode(',', $rawgeneral);
+        }
+        return $data;
     }
 }
