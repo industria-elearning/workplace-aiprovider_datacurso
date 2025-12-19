@@ -37,18 +37,20 @@ class datacurso_api {
     private $licensekey;
 
     /**
-     * Builder.
+     * Builder
      *
+     * @param string $licensekey
      * @throws moodle_exception
      */
-    public function __construct() {
-        $this->baseurl    = 'https://shop.datacurso.com/index.php?m=tokens_manager&api=';
-        $this->licensekey = get_config('aiprovider_datacurso', 'licensekey');
+    public function __construct(string $licensekey) {
+        $this->baseurl = 'https://shop.datacurso.com/index.php?m=tokens_manager&api=';
+        $this->licensekey = trim($licensekey);
 
         if (empty($this->licensekey)) {
-            throw new moodle_exception('API baseurl or licensekey not configured');
+            throw new moodle_exception('licensekey_missing', 'aiprovider_datacurso');
         }
     }
+
 
     /**
      * Build the full URL depending on whether the baseurl uses querystring (?api=).

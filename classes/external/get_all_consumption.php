@@ -16,15 +16,18 @@
 
 namespace aiprovider_datacurso\external;
 
+
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/externallib.php');
 
 use external_api;
+use moodle_exception;
 use external_function_parameters;
 use external_single_structure;
 use external_multiple_structure;
 use external_value;
 use aiprovider_datacurso\httpclient\datacurso_api;
+use aiprovider_datacurso\local\tenant_config;
 
 /**
  * External web service to fetch all Datacurso API consumption history.
@@ -75,12 +78,23 @@ class get_all_consumption extends external_api {
         self::validate_context($context);
         require_capability('aiprovider/datacurso:viewreports', $context);
 
-        $client = new datacurso_api();
+        global $USER;
+
+        $tenantid = \tool_tenant\tenancy::get_tenant_id($USER->id);
+
+        $licensekey = tenant_config::get(
+            'aiprovider_datacurso',
+            $tenantid,
+            'licensekey'
+        );
+
+        $client = new datacurso_api($licensekey);
 
         // Step 1. Lightweight request to get pagination info only.
         $queryparams = [
             'page' => 1,
-            'limit' => 1, // Only to retrieve total count, not full dataset.
+            'limit' => 1,
+            'tenant_id' => $tenantid,
         ];
 
         // Apply filters only if needed.
@@ -121,6 +135,11 @@ class get_all_consumption extends external_api {
 
             $response = $client->get('/tokens/historial-consumos', $queryparams);
 
+            if (empty($response) || ($response['status'] ?? '') !== 'success') {
+                $message = $response['message'] ?? get_string('errorinitinformation', 'aiprovider_datacurso');
+                throw new moodle_exception($message);
+            }
+
             if (empty($response) || $response['status'] !== 'success') {
                 continue;
             }
@@ -152,10 +171,18 @@ class get_all_consumption extends external_api {
             }
         }
 
+        if (empty($response) || $response['status'] !== 'success') {
+            return [
+                'status' => 'success',
+                'total' => count($allconsumptions),
+                'consumption' => $allconsumptions,
+            ];
+        }
+
         return [
-            'status' => 'success',
-            'total' => count($allconsumptions),
-            'consumption' => $allconsumptions,
+            'status' => 'error',
+            'total' => 0,
+            'consumption' => [],
         ];
     }
 

@@ -16,6 +16,8 @@
 
 namespace aiprovider_datacurso\external;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/externallib.php');
 
@@ -24,6 +26,7 @@ use external_function_parameters;
 use external_single_structure;
 use external_value;
 use aiprovider_datacurso\httpclient\datacurso_api;
+use aiprovider_datacurso\local\tenant_config;
 
 /**
  * Web service to get the credits balance.
@@ -48,7 +51,17 @@ class get_credits_balance extends external_api {
         $context = \context_system::instance();
         self::validate_context($context);
         require_capability('aiprovider/datacurso:viewreports', $context);
-        $client = new datacurso_api();
+        global $USER;
+
+        $tenantid = \tool_tenant\tenancy::get_tenant_id($USER->id);
+
+        $licensekey = tenant_config::get(
+            'aiprovider_datacurso',
+            $tenantid,
+            'licensekey'
+        );
+
+        $client = new datacurso_api($licensekey);
 
         $response = $client->get('/tokens/saldo');
 
@@ -58,6 +71,11 @@ class get_credits_balance extends external_api {
                 'balance' => 0,
                 'message' => get_string('errorgetbalancecredits', 'aiprovider_datacurso'),
             ];
+        }
+
+        if (empty($response) || ($response['status'] ?? '') !== 'success') {
+            $message = $response['message'] ?? get_string('errorgetbalancecredits', 'aiprovider_datacurso');
+            throw new moodle_exception($message);
         }
 
         return [
