@@ -23,7 +23,7 @@ require_once($CFG->libdir . '/formslib.php');
  * Tenant-aware configuration form for Datacurso AI Provider.
  *
  * This form replaces settings.php UI and will later persist data
- * to mdl_config_plugins_datacurso instead of mdl_config_plugins.
+ * to mdl_aiprovider_datacurso_tenant_config instead of mdl_config_plugins.
  *
  * @package    aiprovider_datacurso
  * @copyright  2025 Industria Elearning

@@ -19,7 +19,7 @@ namespace aiprovider_datacurso\local;
 /**
  * Tenant configuration storage.
  *
- * Persists configuration values in mdl_config_plugins_datacurso
+ * Persists configuration values in mdl_aiprovider_datacurso_tenant_config
  * instead of mdl_config_plugins.
  *
  * @package    aiprovider_datacurso
@@ -28,7 +28,7 @@ namespace aiprovider_datacurso\local;
  */
 class tenant_config {
     /** @var string Database table name */
-    private const TABLE = 'config_plugins_datacurso';
+    private const TABLE = 'aiprovider_datacurso_tenant_config';
 
     /**
      * Save all configuration values coming from the tenant settings form.
