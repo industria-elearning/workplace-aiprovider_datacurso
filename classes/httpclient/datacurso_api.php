@@ -47,7 +47,7 @@ class datacurso_api {
         $this->licensekey = trim($licensekey);
 
         if (empty($this->licensekey)) {
-            throw new moodle_exception('API baseurl or licensekey not configured');
+            throw new moodle_exception('licensekey_missing', 'aiprovider_datacurso');
         }
     }
 

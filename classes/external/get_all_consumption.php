@@ -16,10 +16,12 @@
 
 namespace aiprovider_datacurso\external;
 
+
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/externallib.php');
 
 use external_api;
+use moodle_exception;
 use external_function_parameters;
 use external_single_structure;
 use external_multiple_structure;
@@ -133,6 +135,11 @@ class get_all_consumption extends external_api {
 
             $response = $client->get('/tokens/historial-consumos', $queryparams);
 
+            if (empty($response) || ($response['status'] ?? '') !== 'success') {
+                $message = $response['message'] ?? get_string('errorinitinformation', 'aiprovider_datacurso');
+                throw new moodle_exception($message);
+            }
+
             if (empty($response) || $response['status'] !== 'success') {
                 continue;
             }
@@ -164,10 +171,18 @@ class get_all_consumption extends external_api {
             }
         }
 
+        if (empty($response) || $response['status'] !== 'success') {
+            return [
+                'status' => 'success',
+                'total' => count($allconsumptions),
+                'consumption' => $allconsumptions,
+            ];;
+        }
+
         return [
-            'status' => 'success',
-            'total' => count($allconsumptions),
-            'consumption' => $allconsumptions,
+            'status' => 'error',
+            'total' => 0,
+            'consumption' => [],
         ];
     }
 

@@ -16,6 +16,8 @@
 
 namespace aiprovider_datacurso\external;
 
+use moodle_exception;
+
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/externallib.php');
 
@@ -69,6 +71,11 @@ class get_credits_balance extends external_api {
                 'balance' => 0,
                 'message' => get_string('errorgetbalancecredits', 'aiprovider_datacurso'),
             ];
+        }
+
+        if (empty($response) || ($response['status'] ?? '') !== 'success') {
+            $message = $response['message'] ?? get_string('errorgetbalancecredits', 'aiprovider_datacurso');
+            throw new moodle_exception($message);
         }
 
         return [
