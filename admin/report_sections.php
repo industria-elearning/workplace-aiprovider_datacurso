@@ -79,7 +79,7 @@ $tabs[] = new tabobject(
 
 $tabs[] = new tabobject(
     'configprovider',
-    new moodle_url('/ai/provider/datacurso/admin/settings_tenant.php', ['id' => $idprovider]),
+    new moodle_url('/ai/provider/datacurso/admin/settings_tenant.php'),
     get_string('link_provider_config', 'aiprovider_datacurso')
 );
 

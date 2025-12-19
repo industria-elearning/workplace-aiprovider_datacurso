@@ -188,7 +188,7 @@ class settings_tenant_form extends \moodleform {
                     get_config('aiprovider_datacurso', "ratelimit_{$sid}_limit")
                 );
 
-            /* ---- Window (value + unit) ---- */
+            //* ---- Window (value + unit).
             $windowvalue =
                 \aiprovider_datacurso\local\tenant_config::get(
                     'aiprovider_datacurso',

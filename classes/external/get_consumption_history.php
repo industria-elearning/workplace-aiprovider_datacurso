@@ -34,6 +34,7 @@ use external_value;
 use external_single_structure;
 use external_multiple_structure;
 use aiprovider_datacurso\httpclient\datacurso_api;
+use aiprovider_datacurso\local\tenant_config;
 
 /**
  * External web service to fetch Datacurso API consumption history.
@@ -107,7 +108,17 @@ class get_consumption_history extends \external_api {
         self::validate_context($context);
         require_capability('aiprovider/datacurso:viewreports', $context);
 
-        $client = new datacurso_api();
+        global $USER;
+
+        $tenantid = \tool_tenant\tenancy::get_tenant_id($USER->id);
+
+        $licensekey = tenant_config::get(
+            'aiprovider_datacurso',
+            $tenantid,
+            'licensekey'
+        );
+
+        $client = new datacurso_api($licensekey);
 
         // Prepare query parameters for API request.
         $queryparams = [
@@ -120,6 +131,7 @@ class get_consumption_history extends \external_api {
             'fecha_hasta' => $params['todate'],
             'shor' => $params['shor'],
             'shordir' => $params['shordir'],
+            'tenant_id' => $tenantid,
         ];
 
         try {
