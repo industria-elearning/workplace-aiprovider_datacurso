@@ -8,23 +8,30 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Utility class providing common functionality for rate limit form elements.
+ *
+ * The abstract method add_settings is removed as per-service settings are now handled
+ * via the hook listener calling the add_form_elements method directly on service classes.
+ *
+ * @package     aiprovider_datacurso
+ * @category    admin
+ * @copyright   2025 Wilber Narvaez <https://datacurso.com>
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace aiprovider_datacurso\local\ratelimit;
 
 /**
- * Class rate limit settings for helper forms services.
- *
- * @package    aiprovider_datacurso
- * @copyright  2025 Wilber Narvaez
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Utility class to manage common rate limit configurations.
  */
 class ratelimit_settings {
-
     /**
      * Retrieve the list of selectable users for the autocomplete control.
      *
@@ -35,9 +42,7 @@ class ratelimit_settings {
         global $DB, $CFG;
 
         [$insql, $params] = $DB->get_in_or_equal($capabilities, SQL_PARAMS_NAMED);
-
-        $namefields = 'u.id, u.firstname, u.lastname, u.alternatename, u.middlename, ' .
-            'u.firstnamephonetic, u.lastnamephonetic';
+        $namefields = 'u.id, u.firstname, u.lastname, u.alternatename, u.middlename, u.firstnamephonetic, u.lastnamephonetic';
 
         $params['deleted'] = 0;
         $params['suspended'] = 0;
@@ -46,28 +51,26 @@ class ratelimit_settings {
 
         $records = $DB->get_records_sql(
             "SELECT {$namefields}
-FROM {user} u
-JOIN {role_assignments} ra ON ra.userid = u.id
-JOIN {role_capabilities} rc ON rc.roleid = ra.roleid
-WHERE rc.permission = :permission
-AND u.deleted = :deleted
-AND u.suspended = :suspended
-AND rc.capability {$insql}
-GROUP BY u.id,
-u.firstname,
-u.lastname,
-u.alternatename,
-u.middlename,
-u.firstnamephonetic,
-u.lastnamephonetic
-HAVING COUNT(DISTINCT rc.capability) = :capabilitiescount
-ORDER BY u.lastname, u.firstname, u.id",
+            FROM
+                {user} u
+                JOIN {role_assignments} ra ON ra.userid = u.id
+                JOIN {role_capabilities} rc ON rc.roleid = ra.roleid
+            WHERE
+                rc.permission = :permission
+                AND u.deleted = :deleted
+                AND u.suspended = :suspended
+                AND rc.capability {$insql}
+            GROUP BY
+                u.id, u.firstname, u.lastname, u.alternatename, u.middlename, u.firstnamephonetic, u.lastnamephonetic
+            HAVING
+                COUNT(DISTINCT rc.capability) = :capabilitiescount
+            ORDER BY u.lastname, u.firstname, u.id",
             $params
         );
 
         $choices = [];
         foreach ($records as $user) {
-            $choices[(string) $user->id] = fullname($user);
+            $choices[(string)$user->id] = fullname($user);
         }
 
         if (empty($choices)) {
