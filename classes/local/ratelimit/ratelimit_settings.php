@@ -8,23 +8,22 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace aiprovider_datacurso\local\ratelimit;
 
 /**
- * Utility class to manage common rate limit configurations.
+ * Class rate limit settings for helper forms services.
  *
  * @package    aiprovider_datacurso
- * @copyright  2025 Industria Elearning
+ * @copyright  2025 Wilber Narvaez
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class ratelimit_settings {
-
     /**
      * Retrieve the list of selectable users for the autocomplete control.
      *
@@ -53,15 +52,15 @@ class ratelimit_settings {
                 AND u.deleted = :deleted
                 AND u.suspended = :suspended
                 AND rc.capability {$insql}
-           GROUP BY u.id,
+            GROUP BY u.id,
                     u.firstname,
                     u.lastname,
                     u.alternatename,
                     u.middlename,
                     u.firstnamephonetic,
                     u.lastnamephonetic
-             HAVING COUNT(DISTINCT rc.capability) = :capabilitiescount
-           ORDER BY u.lastname, u.firstname, u.id",
+            HAVING COUNT(DISTINCT rc.capability) = :capabilitiescount
+            ORDER BY u.lastname, u.firstname, u.id",
             $params
         );
 
