@@ -43,7 +43,7 @@ class datacurso_api {
      * @param string|null $licensekey The license key obtained from Datacurso SHOP.
      * @throws moodle_exception
      */
-    public function __construct( ?string $licensekey = null) {
+    public function __construct(?string $licensekey = null) {
         global $USER;
         $this->baseurl = 'https://shop.datacurso.com/index.php?m=tokens_manager&api=';
 
@@ -58,7 +58,7 @@ class datacurso_api {
         );
 
         $this->licensekey = $licensekey ?? trim($licensekeytenant);
-        
+
         if (empty($this->licensekey)) {
             throw new moodle_exception('licensekey_missing', 'aiprovider_datacurso');
         }
