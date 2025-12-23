@@ -16,6 +16,9 @@
 
 namespace aiprovider_datacurso\local;
 
+use tool_tenant\tenancy;
+use aiprovider_datacurso\local\tenant_config;
+
 /**
  * Per-user rate limiter for Datacurso services.
  *
@@ -24,6 +27,25 @@ namespace aiprovider_datacurso\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class ratelimiter {
+    /** @var int|null $tenantid The ID of current tenant */
+    private int $tenantid;
+
+    public function __construct() {
+        global $USER;
+        $this->tenantid = tenancy::get_tenant_id($USER->id);
+    }
+
+    /**
+     * Wrapper to fetch tenant configuration.
+     *
+     * @param string $key
+     * @return mixed|null
+     */
+    private function get_tenant_config(string $key) {
+        return tenant_config::get('aiprovider_datacurso', $this->tenantid, $key);
+    }
+
+
     /**
      * Determine if the given user is allowed to use a service.
      *
@@ -50,15 +72,15 @@ class ratelimiter {
             return true;
         }
 
-        $settings = get_config('aiprovider_datacurso');
-        $coursecreators = $settings->ratelimit_local_coursegen_coursecreators ?? '';
+        $key = "ratelimit_{$serviceid}_coursecreators";
+        $raw = (string)$this->get_tenant_config($key);
 
-        $coursecreators = explode(',', $coursecreators);
-        if (empty($coursecreators)) {
+        if ($raw === '') {
             return true;
         }
 
-        return in_array($userid, $coursecreators);
+        $allowed = array_filter(explode(',', $raw));
+        return empty($allowed) || in_array($userid, $allowed);
     }
 
     /**
@@ -199,8 +221,7 @@ class ratelimiter {
      * @return bool True when the rate limit is enabled, false otherwise.
      */
     private function is_rate_limit_enabled(string $serviceid): bool {
-        $value = get_config('aiprovider_datacurso', "ratelimit_{$serviceid}_enable");
-        return (int)$value === 1;
+        return (int)$this->get_tenant_config("ratelimit_{$serviceid}_enable") === 1;
     }
 
     /**
@@ -210,8 +231,7 @@ class ratelimiter {
      * @return bool True when the user restriction is enabled, false otherwise.
      */
     private function is_user_restriction_enabled(string $serviceid): bool {
-        $value = get_config('aiprovider_datacurso', "ratelimit_{$serviceid}_allowedusers_enable");
-        return (int)$value === 1;
+        return (int)$this->get_tenant_config("ratelimit_{$serviceid}_allowedusers_enable") === 1;
     }
 
     /**
@@ -221,8 +241,7 @@ class ratelimiter {
      * @return int
      */
     private function get_service_limit(string $serviceid): int {
-        $value = get_config('aiprovider_datacurso', "ratelimit_{$serviceid}_limit");
-        return (int)$value;
+        return (int)$this->get_tenant_config("ratelimit_{$serviceid}_limit");
     }
 
     /**
@@ -232,23 +251,17 @@ class ratelimiter {
      * @return int
      */
     private function get_window_length_in_seconds(string $serviceid): int {
-        $json = (string)get_config('aiprovider_datacurso', "ratelimit_{$serviceid}_window");
+        $value = (int)$this->get_tenant_config("ratelimit_{$serviceid}_window_value");
+        $unit  = (string)$this->get_tenant_config("ratelimit_{$serviceid}_window_unit");
 
-        $data = json_decode($json, true);
-        if (!is_array($data)) {
-            $data = [];
-        }
-
-        $value = (int)($data['value'] ?? 1);
         $value = $value > 0 ? $value : 1;
 
-        $unit = (string)($data['unit'] ?? 'hours');
         $multiplier = match ($unit) {
             'seconds' => 1,
             'minutes' => MINSECS,
-            'hours' => HOURSECS,
-            'days' => DAYSECS,
-            default => HOURSECS,
+            'hours'   => HOURSECS,
+            'days'    => DAYSECS,
+            default   => HOURSECS,
         };
 
         return $value * $multiplier;
