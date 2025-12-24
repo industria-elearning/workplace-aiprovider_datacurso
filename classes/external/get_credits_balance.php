@@ -61,7 +61,7 @@ class get_credits_balance extends external_api {
             'licensekey'
         );
 
-        $client = new datacurso_api($licensekey);
+        $client = new datacurso_api();
 
         $response = $client->get('/tokens/saldo');
 
