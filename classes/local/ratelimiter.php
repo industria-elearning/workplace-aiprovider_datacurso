@@ -30,6 +30,9 @@ class ratelimiter {
     /** @var int|null $tenantid The ID of current tenant */
     private int $tenantid;
 
+    /**
+     * Constructor for the rate limiter.
+     */
     public function __construct() {
         global $USER;
         $this->tenantid = tenancy::get_tenant_id($USER->id);
