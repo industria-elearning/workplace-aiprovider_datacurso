@@ -16,8 +16,6 @@
 
 namespace aiprovider_datacurso\httpclient;
 
-use aiprovider_datacurso\local\tenant_config;
-
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/filelib.php');
@@ -44,9 +42,6 @@ class datacurso_api_base {
     /** @var string|null $licensekey The license key obtained from Datacurso SHOP */
     protected $licensekey;
 
-    /** @var int|null $tenantid The id number of current tenant */
-    protected $tenantid;
-
     /**
      * Constructor.
      *
@@ -54,21 +49,8 @@ class datacurso_api_base {
      * @param string|null $licensekey The license key obtained from Datacurso SHOP.
      */
     public function __construct(string $baseurl, ?string $licensekey = null) {
-        global $USER;
         $this->baseurl = $baseurl;
-
-        // Resolve tenant.
-        $tenantid = \tool_tenant\tenancy::get_tenant_id($USER->id);
-
-        // Resolve license key from tenant config.
-        $licensekeytenant = tenant_config::get(
-            'aiprovider_datacurso',
-            $tenantid,
-            'licensekey'
-        );
-
-        $this->licensekey = $licensekey ?? $licensekeytenant;
-        $this->tenantid = $tenantid;
+        $this->licensekey = $licensekey ?? get_config('aiprovider_datacurso', 'licensekey');
     }
 
     /**
@@ -191,7 +173,6 @@ class datacurso_api_base {
             'userid' => $payload['userid'] ?? $USER->id,
             'timezone' => \core_date::get_user_timezone(),
             'lang' => $payload['lang'] ?? current_language(),
-            'tenant_id' => (string) $this->tenantid,
         ];
         switch (strtoupper($method)) {
             case 'GET':

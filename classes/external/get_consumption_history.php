@@ -120,7 +120,7 @@ class get_consumption_history extends \external_api {
             'licensekey'
         );
 
-        $client = new datacurso_api();
+        $client = new datacurso_api($licensekey);
 
         // Prepare query parameters for API request.
         $queryparams = [

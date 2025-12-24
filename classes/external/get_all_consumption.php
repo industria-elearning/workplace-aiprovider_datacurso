@@ -88,7 +88,7 @@ class get_all_consumption extends external_api {
             'licensekey'
         );
 
-        $client = new datacurso_api();
+        $client = new datacurso_api($licensekey);
 
         // Step 1. Lightweight request to get pagination info only.
         $queryparams = [
@@ -171,7 +171,7 @@ class get_all_consumption extends external_api {
             }
         }
 
-        if (empty($response) || $response['status'] === 'success') {
+        if (empty($response) || $response['status'] !== 'success') {
             return [
                 'status' => 'success',
                 'total' => count($allconsumptions),
