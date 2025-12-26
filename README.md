@@ -178,12 +178,6 @@ You can find more information about these plugins in their respective documentat
 
 This feature allows you to automatically configure the Web Service used by Datacurso to fetch contextual information from your platform and improve AI responses.
 
-### How to use it
-
-To configure the webservice, go to `Site administration > Server > Datacurso webservice setup`.
-
-![Datacurso Webservice Setup](./_docs/images/aiprovider_datacurso_datacurso_webservice_setup.png)
-
 ### What it does:
 - Enables Web services and the **REST** protocol if they are not already active.
 - Creates or reuses the service user `datacursows`.
