@@ -36,9 +36,9 @@ class ai_services_api extends datacurso_api_base {
     public function __construct(?string $licensekey = null) {
         global $CFG;
         if ($this->is_for_ue()) {
-            parent::__construct('https://eu.plugins-ai.datacurso.com', $licensekey);
+            parent::__construct('https://plugins-ai-dev.datacurso.com', $licensekey);
         } else {
-            parent::__construct('https://plugins-ai.datacurso.com', $licensekey);
+            parent::__construct('https://plugins-ai-dev.datacurso.com', $licensekey);
         }
     }
 
