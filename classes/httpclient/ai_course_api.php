@@ -30,12 +30,15 @@ class ai_course_api extends datacurso_api_base {
      * Constructor.
      *
      * @param string|null $licensekey The license key obtained from Datacurso SHOP.
+     * @param int|null $tenantid Tenant id to use.
      */
-    public function __construct(?string $licensekey = null) {
-        if ($this->is_for_ue()) {
-            parent::__construct('https://eu.course-ai.datacurso.com', $licensekey);
+    public function __construct(?string $licensekey = null, ?int $tenantid = null) {
+        $isforue = datacurso_api_base::is_license_for_ue($licensekey, $tenantid);
+
+        if ($isforue) {
+            parent::__construct('https://eu.course-ai.datacurso.com', $licensekey, $tenantid);
         } else {
-            parent::__construct('https://course-ai.datacurso.com', $licensekey);
+            parent::__construct('https://course-ai.datacurso.com', $licensekey, $tenantid);
         }
     }
 
