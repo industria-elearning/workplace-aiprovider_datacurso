@@ -52,23 +52,24 @@ class datacurso_api_base {
      *
      * @param string $baseurl The base URL for Datacurso API requests.
      * @param string|null $licensekey The license key obtained from Datacurso SHOP.
+     * @param int|null $tenantid Tenant id to use.
      */
-    public function __construct(string $baseurl, ?string $licensekey = null) {
+    public function __construct(string $baseurl, ?string $licensekey = null, ?int $tenantid = null) {
         global $USER;
-        $this->baseurl = $baseurl;
 
         // Resolve tenant.
-        $tenantid = \tool_tenant\tenancy::get_tenant_id($USER->id);
+        $tenantid = $tenantid ?? \tool_tenant\tenancy::get_tenant_id($USER->id);
 
-        // Resolve license key from tenant config.
+        // Resolve license key from tenant config when not explicitly provided.
         $licensekeytenant = tenant_config::get(
             'aiprovider_datacurso',
             $tenantid,
             'licensekey'
         );
 
+        $this->baseurl = $baseurl;
         $this->licensekey = $licensekey ?? $licensekeytenant;
-        $this->tenantid = $tenantid;
+        $this->tenantid = (int)$tenantid;
     }
 
     /**
@@ -93,8 +94,7 @@ class datacurso_api_base {
     public function download_file($endpoint, $filename, $filerecord = []): ?\stored_file {
         global $USER;
 
-        $client = new ai_course_api();
-        $baseurl = $client->get_base_url();
+        $baseurl = $this->get_base_url();
         $packageurl = $baseurl . ltrim($endpoint, '/');
 
         $userid = $USER->id;
@@ -325,13 +325,33 @@ class datacurso_api_base {
     }
 
     /**
-     * Check if the license is for European Union.
+     * Check if a given license (and tenant) is for European Union.
      *
+     * This helper does not rely on object state, so it can be used
+     * from constructors before the base class is fully initialised.
+     *
+     * @param string|null $licensekey
+     * @param int|null $tenantid
      * @return bool
      */
-    public function is_for_ue(): bool {
-        $datacursoapi = new datacurso_api();
+    public static function is_license_for_ue(?string $licensekey = null, ?int $tenantid = null): bool {
+        global $USER;
+
+        // Resolve tenant.
+        $tenantid = $tenantid ?? \tool_tenant\tenancy::get_tenant_id($USER->id);
+
+        // Resolve license key from tenant config when not explicitly provided.
+        $licensekeytenant = tenant_config::get(
+            'aiprovider_datacurso',
+            $tenantid,
+            'licensekey'
+        );
+
+        $resolvedlicensekey = $licensekey ?? $licensekeytenant;
+
+        $datacursoapi = new datacurso_api($resolvedlicensekey);
         $response = $datacursoapi->get('tokens/saldo');
-        return $response['is_for_eu'];
+
+        return !empty($response['is_for_eu']);
     }
 }
