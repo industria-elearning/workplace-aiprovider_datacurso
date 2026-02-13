@@ -38,10 +38,11 @@ class ai_services_api extends datacurso_api_base {
         $isforue = datacurso_api_base::is_license_for_ue($licensekey, $tenantid);
 
         if ($isforue) {
-            parent::__construct('https://plugins-ai-dev.datacurso.com', $licensekey, $tenantid);
+            parent::__construct('https://eu.plugins-ai.datacurso.com', $licensekey, $tenantid);
         } else {
-            parent::__construct('https://plugins-ai-dev.datacurso.com', $licensekey, $tenantid);
+            parent::__construct('https://plugins-ai.datacurso.com', $licensekey, $tenantid);
         }
+        // parent::__construct('http://plugins-ai-server:8000', $licensekey, $tenantid);
     }
 
     /**
@@ -53,6 +54,7 @@ class ai_services_api extends datacurso_api_base {
     public function get_streaming_url_for_session(string $sessionid): string {
         // Build streaming URL with session ID.
         $baseurl = rtrim($this->baseurl, '/');
+        // $baseurl = 'http://localhost:8002';
 
         return $baseurl . '/chat/stream?session_id=' . urlencode($sessionid);
     }
